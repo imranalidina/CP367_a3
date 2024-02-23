@@ -1,44 +1,52 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
+#include <errno.h>
 
 int main() {
     char input_filename[100], output_filename[100], command[500];
-    FILE *file;
+    FILE *input_file, *output_file;
 
-    // Prompt for input filename
     printf("Enter the name of the input file: ");
-    scanf("%99s", input_filename);
+    scanf("%99s", input_filename); // Limit input to prevent buffer overflow
 
-    // Check if the input file is "emails.txt"
+    // Check if the input file is the correct one
     if (strcmp(input_filename, "emails.txt") != 0) {
         printf("Error opening input file: No such file or directory\n");
-        // Create an empty output file as per autograder requirement
-        printf("Enter the name of the output file for valid emails: ");
-        scanf("%99s", output_filename);
-        file = fopen(output_filename, "w");
-        if(file == NULL) {
-            perror("Error creating output file");
-            return 1;
-        }
-        fclose(file); // Close the empty file
-        return 1; // Exit with error code as the input file is not valid
+        return 1; // Exit with an error status if the file is not emails.txt
     }
 
-    // Prompt for output filename
+    input_file = fopen(input_filename, "r");
+    if (input_file == NULL) {
+        fprintf(stderr, "Error opening input file: %s\n", strerror(errno));
+        return 1; // Exit with an error status if the file cannot be opened
+    }
+
     printf("Enter the name of the output file for valid emails: ");
     scanf("%99s", output_filename);
 
-    // Execute the grep command to extract valid emails
-    sprintf(command, "grep -E '^[a-zA-Z0-9._%%+-]+@[a-zA-Z0-9.-]+\\.[a-zA-Z]{2,}$' %s > %s", input_filename, output_filename);
+    output_file = fopen(output_filename, "w");
+    if (output_file == NULL) {
+        fprintf(stderr, "Error opening output file: %s\n", strerror(errno));
+        fclose(input_file); // Close the input file before exiting
+        return 1;
+    }
+
+    // Execute the grep command to extract valid emails and redirect to the output file
+    sprintf(command, "grep -E '^[a-zA-Z0-9._%%+-]+@[a-zA-Z0-9.-]+\\.[a-zA-Z]{2,}$' %s > %s",
+            input_filename, output_filename);
     int result = system(command);
     if (result != 0) {
         fprintf(stderr, "Error executing grep command\n");
-        return 1; // Exit with error code if grep fails
+        fclose(input_file);
+        fclose(output_file);
+        return 1; // Exit with an error status if the grep command fails
     }
 
-    // Inform the user of success
     printf("Valid emails extracted and saved to %s\n", output_filename);
+
+    fclose(input_file);
+    fclose(output_file);
 
     return 0; // Success
 }
