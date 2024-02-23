@@ -1,48 +1,24 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
-#include <errno.h>
-
-int is_valid_email(const char *email) {
-    // check if email is valid
-    return 1;
-}
 
 int main() {
-    FILE *input_file, *output_file;
-    char line[1024];
-    int errno;
+    char input_filename[100], command[500];
 
     printf("Enter the name of the input file: ");
-    char input_filename[100];
     scanf("%s", input_filename);
 
-    input_file = fopen(input_filename, "r");
-    if (input_file == NULL) {
-        fprintf(stderr, "Error opening input file: %s\n", strerror(errno));
-        return 1;
-    }
+    sprintf(command, "grep -E '([a-zA-Z0-9. _%+/-]+)@([a-zA-Z0-9]+\\.)+[a-zA-Z0-9]{2,}' %s > valid.txt", input_filename);
+    system(command);
 
     printf("Enter the name of the output file for valid emails: ");
     char output_filename[100];
     scanf("%s", output_filename);
 
-    output_file = fopen(output_filename, "w");
-    if (output_file == NULL) {
-        fprintf(stderr, "Error opening output file: %s\n", strerror(errno));
-        fclose(input_file);
-        return 1;
-    }
+    sprintf(command, "mv valid.txt %s", output_filename);
+    system(command);
 
-    while (fgets(line, sizeof(line), input_file) != NULL) {
-        line[strcspn(line, "\n")] = '\0';
-        if (is_valid_email(line)) {
-            fprintf(output_file, "%s\n", line);
-        }
-    }
-
-    fclose(input_file);
-    fclose(output_file);
+    printf("Valid emails extracted and saved to %s\n", output_filename);
 
     return 0;
 }
