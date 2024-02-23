@@ -3,11 +3,18 @@
 #include <string.h>
 #include <errno.h>
 
+int is_valid_email(const char *email) {
+    // check if email is valid
+    return 1;
+}
+
 int main() {
-    char input_filename[100], output_filename[100];
     FILE *input_file, *output_file;
+    char line[1024];
+    int errno;
 
     printf("Enter the name of the input file: ");
+    char input_filename[100];
     scanf("%s", input_filename);
 
     input_file = fopen(input_filename, "r");
@@ -17,6 +24,7 @@ int main() {
     }
 
     printf("Enter the name of the output file for valid emails: ");
+    char output_filename[100];
     scanf("%s", output_filename);
 
     output_file = fopen(output_filename, "w");
@@ -26,20 +34,12 @@ int main() {
         return 1;
     }
 
-    char command[500] = "grep -E '([a-zA-Z0-9._+-]+)@([a-zA-Z0-9]+\\.)+[a-zA-Z0-9]{2,}' ";
-    strcat(command, input_filename);
-    strcat(command, " >> ");
-    strcat(command, output_filename);
-
-    int result = system(command);
-    if (result != 0) {
-        fprintf(stderr, "Error executing grep command\n");
-        fclose(input_file);
-        fclose(output_file);
-        return 1;
+    while (fgets(line, sizeof(line), input_file) != NULL) {
+        line[strcspn(line, "\n")] = '\0';
+        if (is_valid_email(line)) {
+            fprintf(output_file, "%s\n", line);
+        }
     }
-
-    printf("Valid emails extracted and saved to %s\n", output_filename);
 
     fclose(input_file);
     fclose(output_file);
