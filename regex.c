@@ -1,48 +1,40 @@
 #include <stdio.h>
 #include <stdlib.h>
-#include <string.h>
-#include <errno.h>
 
 int main() {
-    char input_filename[100], output_filename[100];
+    char inputFileName[100], outputFileName[100];
+    char command[300];
     FILE *input_file, *output_file;
 
-    printf("Enter the name of the input file: ");
-    scanf("%s", input_filename);
+    // Ask the user to enter the name of the email text input file
+    printf("Enter the name of the email text input file: ");
+    scanf("%s", inputFileName);
 
-    input_file = fopen(input_filename, "r");
+    input_file = fopen(inputFileName, "r");
     if (input_file == NULL) {
-        fprintf(stderr, "Error opening input file: %s\n", strerror(errno));
+        printf("Error opening input file: %s\n", inputFileName);
         return 1;
     }
 
     printf("Enter the name of the output file for valid emails: ");
-    scanf("%s", output_filename);
+    scanf("%s", outputFileName);
 
-    output_file = fopen(output_filename, "w");
+    output_file = fopen(outputFileName, "a");
     if (output_file == NULL) {
-        fprintf(stderr, "Error opening output file: %s\n", strerror(errno));
+        printf("Error opening output file: %s\n", outputFileName);
         fclose(input_file);
         return 1;
     }
 
-    char command[500] = "grep -E '([a-zA-Z0-9._+-]+)@([a-zA-Z0-9]+\\.)+[a-zA-Z0-9]{2,}' ";
-    strcat(command, input_filename);
-    strcat(command, " >> ");
-    strcat(command, output_filename);
+    snprintf(command, sizeof(command), "grep -E '^[a-zA-Z0-9]+([._+-][a-zA-Z0-9]+)*@[a-zA-Z0-9]+([.-][a-zA-Z0-9]+)*\\.[a-zA-Z]{2,}$' %s > %s", inputFileName, outputFileName);
 
-    int result = system(command);
-    if (result != 0) {
-        fprintf(stderr, "Error executing grep command\n");
-        fclose(input_file);
-        fclose(output_file);
-        return 1;
-    }
+    system(command);
 
-    printf("Valid emails extracted and saved to %s\n", output_filename);
+    printf("Valid emails have been redirected to %s\n", outputFileName);
 
     fclose(input_file);
     fclose(output_file);
+    
 
     return 0;
 }
