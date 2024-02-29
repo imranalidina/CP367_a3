@@ -1,40 +1,60 @@
 #include <stdio.h>
 #include <stdlib.h>
+#include <string.h>
 
-int main() {
-    char inputFileName[100], outputFileName[100];
-    char command[300];
+#define MAX_EMAIL_LENGTH 100
+#define MAX_OUTPUT_LENGTH 1000
+
+void filter_valid_emails(const char *input_file_name, const char *output_file_name) {
     FILE *input_file, *output_file;
+    char email[MAX_EMAIL_LENGTH];
+    char command[300];
 
-    // Ask the user to enter the name of the email text input file
-    printf("Enter the name of the email text input file: ");
-    scanf("%s", inputFileName);
-
-    input_file = fopen(inputFileName, "r");
+    input_file = fopen(input_file_name, "r");
     if (input_file == NULL) {
-        printf("Error opening input file: %s\n", inputFileName);
-        return 1;
+        printf("Error opening input file: %s\n", input_file_name);
+        exit(1);
     }
 
-    printf("Enter the name of the output file for valid emails: ");
-    scanf("%s", outputFileName);
-
-    output_file = fopen(outputFileName, "a");
+    output_file = fopen(output_file_name, "a");
     if (output_file == NULL) {
-        printf("Error opening output file: %s\n", outputFileName);
+        printf("Error opening output file: %s\n", output_file_name);
         fclose(input_file);
-        return 1;
+        exit(1);
     }
 
-    snprintf(command, sizeof(command), "grep -E '^[a-zA-Z0-9]+([._+-][a-zA-Z0-9]+)*@[a-zA-Z0-9]+([.-][a-zA-Z0-9]+)*\\.[a-zA-Z]{2,}$' %s > %s", inputFileName, outputFileName);
+    while (fgets(email, MAX_EMAIL_LENGTH, input_file) != NULL) {
+        char *at_symbol = strchr(email, '@');
+        if (at_symbol == NULL) {
+            continue;
+        }
 
-    system(command);
+        char *dot = strchr(at_symbol + 1, '.');
+        if (dot == NULL) {
+            continue;
+        }
 
-    printf("Valid emails have been redirected to %s\n", outputFileName);
+        char *domain = dot + 1;
+        if (strlen(domain) < 2) {
+            continue;
+        }
+
+        fputs(email, output_file);
+    }
+
+    printf("Valid emails have been redirected to %s\n", output_file_name);
 
     fclose(input_file);
     fclose(output_file);
-    
+}
+
+int main(int argc, char *argv[]) {
+    if (argc != 3) {
+        printf("Usage: %s <input_file_name> <output_file_name>\n", argv[0]);
+        return 1;
+    }
+
+    filter_valid_emails(argv[1], argv[2]);
 
     return 0;
 }
